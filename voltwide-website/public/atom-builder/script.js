@@ -367,8 +367,12 @@ function getGroupPeriod(atomicNumber) {
 function initCanvas() {
     canvas.width = sizes.canvas.width;
     canvas.height = sizes.canvas.height;
+    
     state.nucleus.x = canvas.width / 2;
     state.nucleus.y = canvas.height / 2;
+
+    canvas.style.display = 'block';
+    canvas.style.backgroundColor = colors.background;
     
     function resizeCanvas() {
         const containerWidth = canvas.parentElement.clientWidth;
@@ -382,8 +386,21 @@ function initCanvas() {
         }
     }
     
+    // Initial resize and add listener
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
+    
+    // Ensure canvas context is available
+    if (!ctx) {
+        console.error('Failed to get canvas context');
+        const container = canvas.parentElement;
+        const error = document.createElement('div');
+        error.textContent = 'Canvas rendering not supported. Please try a different browser.';
+        error.style.color = 'red';
+        error.style.padding = '20px';
+        error.style.textAlign = 'center';
+        container.appendChild(error);
+    }
 }
 
 function updateNucleusSize() {
@@ -551,14 +568,17 @@ function updateElementInfo() {
 }
 
 function draw() {
+    // Clear canvas with background color
     ctx.fillStyle = colors.background;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
+    // Draw nucleus
     ctx.beginPath();
     ctx.arc(state.nucleus.x, state.nucleus.y, state.nucleus.radius, 0, Math.PI * 2);
     ctx.fillStyle = colors.nucleus;
     ctx.fill();
     
+    // Draw electron shells
     state.shells.forEach(shell => {
         ctx.beginPath();
         ctx.arc(state.nucleus.x, state.nucleus.y, shell.radius, 0, Math.PI * 2);
@@ -780,10 +800,32 @@ function setupEventListeners() {
 }
 
 function init() {
+    console.log('Initializing atom builder simulation');
+    
+    // Initialize elements data
     initElementLookup();
+    
+    // Initialize canvas
     initCanvas();
+    
+    // Set up event listeners
     setupEventListeners();
+    
+    // Initialize the simulation
     initSimulation();
+    
+    // Force initial draw
+    draw();
+    
+    console.log('Initialization complete');
 }
 
-window.addEventListener('DOMContentLoaded', init); 
+// Wait for DOM content to be loaded before initializing
+document.addEventListener('DOMContentLoaded', init);
+// Also try window load event as a fallback
+window.addEventListener('load', function() {
+    if (!state.animation) {
+        console.log('Initializing on window load (fallback)');
+        init();
+    }
+}); 

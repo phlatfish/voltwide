@@ -2,7 +2,7 @@
   "rewrites": [
     { "source": "/atom-builder", "destination": "/atom-builder/index.html" },
     { "source": "/atom-builder/(.*)", "destination": "/atom-builder/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!atom-builder|assets).*)", "destination": "/index.html" }
   ],
   "cleanUrls": true,
   "buildCommand": "npm run build",
