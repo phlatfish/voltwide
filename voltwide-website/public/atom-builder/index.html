@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atom Builder Simulation</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .container {
+      padding: 0;
+      max-width: 100%;
+    }
+    
+    .new-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .top-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 5px;
+      padding: 5px 10px;
+      width: 100%;
+      max-width: 800px;
+    }
+    
+    .particle-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      width: 100%;
+    }
+    
+    .particle-wrapper .particle-group {
+      flex: 1;
+      min-width: 200px;
+      margin-bottom: 0;
+    }
+    
+    .main-content {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      padding: 0 10px 10px 10px;
+      align-items: flex-start;
+      justify-content: center;
+      width: 100%;
+      max-width: 900px;
+    }
+    
+    .simulation-container {
+      flex: 1;
+      min-width: 0;
+      aspect-ratio: 1/1;
+      max-width: 500px;
+    }
+    
+    .info-panel {
+      flex: 1;
+      background-color: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      max-width: 350px;
+      align-self: center;
+      height: auto;
+    }
+    
+    .element-info {
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    
+    .reset-button-container {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      max-width: 600px;
+    }
+    
+    .reset-button {
+      padding: 10px 40px;
+      width: 100%;
+      max-width: 250px;
+      height: 40px;
+      font-size: 16px;
+    }
+    
+    @media (max-width: 900px) {
+      .main-content {
+        flex-direction: column;
+      }
+      
+      .top-controls {
+        flex-direction: column;
+      }
+      
+      .info-panel {
+        max-width: none;
+      }
+    }
+    
+    .element-description {
+      margin-top: 15px;
+    }
+    
+    #simulation-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="new-layout">
+      <div class="top-controls">
+        <div class="particle-wrapper">
+
+          <div class="particle-group">
+            <h3>Protons (<span id="proton-count">1</span>)</h3>
+            <div class="button-group">
+              <button id="add-proton" class="add-proton">Add Proton</button>
+              <button id="remove-proton" class="remove-proton">Remove Proton</button>
+            </div>
+            <div class="input-control">
+              <input type="number" id="proton-input" min="1" max="118" placeholder="1-118">
+              <button id="set-proton-btn" class="set-btn">Set</button>
+            </div>
+          </div>
+          
+          <div class="particle-group">
+            <h3>Neutrons (<span id="neutron-count">0</span>)</h3>
+            <div class="button-group">
+              <button id="add-neutron" class="add-neutron">Add Neutron</button>
+              <button id="remove-neutron" class="remove-neutron">Remove Neutron</button>
+            </div>
+            <div class="input-control">
+              <input type="number" id="neutron-input" min="0" max="118" placeholder="0-118">
+              <button id="set-neutron-btn" class="set-btn">Set</button>
+            </div>
+          </div>
+          
+          <div class="particle-group">
+            <h3>Electrons (<span id="electron-count">1</span>)</h3>
+            <div class="button-group">
+              <button id="add-electron" class="add-electron">Add Electron</button>
+              <button id="remove-electron" class="remove-electron">Remove Electron</button>
+            </div>
+            <div class="input-control">
+              <input type="number" id="electron-input" min="0" max="118" placeholder="0-118">
+              <button id="set-electron-btn" class="set-btn">Set</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="main-content">
+        <div class="simulation-container">
+          <canvas id="simulation-canvas"></canvas>
+        </div>
+        
+        <div class="info-panel">
+          <div class="element-info">
+            <div class="element-display">
+              <h2 id="element-symbol">H</h2>
+              <p id="element-name">Hydrogen</p>
+            </div>
+            
+            <div class="main-properties">
+              <div class="property">
+                <div class="property-label">Atomic Number</div>
+                <div id="atomic-number" class="property-value">1</div>
+              </div>
+              <div class="property">
+                <div class="property-label">Atomic Mass</div>
+                <div id="atomic-mass" class="property-value">1</div>
+              </div>
+            </div>
+            
+            <div class="secondary-properties">
+              <div class="property-row">
+                <p>Group: <span id="element-group">1 (Special Position)</span></p>
+                <p>Period: <span id="element-period">1</span></p>
+              </div>
+              <div class="property-row">
+                <p>Electronegativity: <span id="electronegativity">2.20</span></p>
+                <p>Valence Electrons: <span id="valence-electrons">1</span></p>
+              </div>
+            </div>
+            
+            <div class="element-description">
+              <p id="element-description">The lightest element and most abundant chemical substance in the universe. It has one proton and one electron.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="reset-button-container">
+        <button id="reset-btn" class="reset-button">Reset Atom</button>
+      </div>
+    </div>
+  </div>
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html> 
