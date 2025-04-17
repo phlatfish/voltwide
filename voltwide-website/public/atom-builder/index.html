@@ -439,7 +439,11 @@
       </div>
     </div>
   </div>
-  <script src="data.js" defer></script>
-  <script src="script.js" defer></script>
+  <!-- Add timestamp to bust cache -->
+  <script>
+    // Add timestamp to script tags to prevent caching
+    document.write('<script src="data.js?v=' + new Date().getTime() + '"><\/script>');
+    document.write('<script src="script.js?v=' + new Date().getTime() + '"><\/script>');
+  </script>
 </body>
 </html> 
