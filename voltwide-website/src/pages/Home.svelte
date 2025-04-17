@@ -40,7 +40,7 @@
           adding protons, neutrons, and electrons. Discover the elements as you create
           their atomic structures.
         </p>
-        <a href="./atom-builder/index.html" class="tool-link">Launch Atom Builder</a>
+        <a href="/atom-builder/index.html" class="tool-link">Launch Atom Builder</a>
       </div>
     </div>
   </div>
