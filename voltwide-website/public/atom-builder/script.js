@@ -807,15 +807,27 @@ function init() {
         console.error('elementsData is not defined, attempting to load data.js again');
         // Try to load data.js dynamically if not already loaded
         const script = document.createElement('script');
-        script.src = './data.js';
+        // Use absolute path to ensure it works in all deployment environments
+        script.src = '/atom-builder/data.js';
         script.onload = function() {
-            console.log('Successfully loaded data.js dynamically');
+            console.log('Successfully loaded data.js dynamically with absolute path');
             continueInit();
         };
-        script.onerror = function() {
-            console.error('Failed to load data.js dynamically');
-            // Continue with fallback data
-            continueInit();
+        script.onerror = function(e) {
+            console.error('Failed to load data.js with absolute path', e);
+            // Try with relative path as fallback
+            const fallbackScript = document.createElement('script');
+            fallbackScript.src = './data.js';
+            fallbackScript.onload = function() {
+                console.log('Successfully loaded data.js dynamically with relative path');
+                continueInit();
+            };
+            fallbackScript.onerror = function(e) {
+                console.error('Failed to load data.js with relative path', e);
+                // Continue with fallback data
+                continueInit();
+            };
+            document.head.appendChild(fallbackScript);
         };
         document.head.appendChild(script);
     } else {

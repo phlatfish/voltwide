@@ -15,15 +15,30 @@
       border: 1px solid #ddd;
       border-radius: 5px;
     }
+    .test-button {
+      padding: 10px;
+      margin: 10px 0;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <h1>Script Loading Test</h1>
   <p>This page tests whether the data.js and script.js files are loading correctly.</p>
   <div id="status">Checking script loading...</div>
+  
+  <button id="test-absolute" class="test-button">Test Loading with Absolute Path</button>
+  <button id="test-relative" class="test-button">Test Loading with Relative Path</button>
+  <button id="check-file-exists" class="test-button">Check if data.js exists</button>
+  <div id="fetch-result"></div>
 
   <script>
     const statusEl = document.getElementById('status');
+    const fetchResultEl = document.getElementById('fetch-result');
     
     // Check if scripts are loaded correctly
     window.addEventListener('load', function() {
@@ -48,10 +63,58 @@
         statusEl.innerHTML = status;
       }, 500);
     });
+    
+    // Test buttons
+    document.getElementById('test-absolute').addEventListener('click', function() {
+      const script = document.createElement('script');
+      script.src = '/atom-builder/data.js';
+      script.onload = function() {
+        fetchResultEl.innerHTML += '<p style="color: green">✓ Loaded successfully with absolute path</p>';
+      };
+      script.onerror = function() {
+        fetchResultEl.innerHTML += '<p style="color: red">✗ Failed to load with absolute path</p>';
+      };
+      document.head.appendChild(script);
+    });
+    
+    document.getElementById('test-relative').addEventListener('click', function() {
+      const script = document.createElement('script');
+      script.src = './data.js';
+      script.onload = function() {
+        fetchResultEl.innerHTML += '<p style="color: green">✓ Loaded successfully with relative path</p>';
+      };
+      script.onerror = function() {
+        fetchResultEl.innerHTML += '<p style="color: red">✗ Failed to load with relative path</p>';
+      };
+      document.head.appendChild(script);
+    });
+    
+    document.getElementById('check-file-exists').addEventListener('click', function() {
+      // Try both absolute and relative paths
+      Promise.all([
+        fetch('/atom-builder/data.js').catch(e => ({ error: e, path: 'absolute' })),
+        fetch('./data.js').catch(e => ({ error: e, path: 'relative' }))
+      ])
+      .then(results => {
+        fetchResultEl.innerHTML = '<h3>Fetch Results:</h3>';
+        
+        results.forEach((result, i) => {
+          const path = i === 0 ? 'absolute path (/atom-builder/data.js)' : 'relative path (./data.js)';
+          
+          if (result.error) {
+            fetchResultEl.innerHTML += `<p style="color: red">✗ Failed to fetch with ${path}: ${result.error}</p>`;
+          } else if (result.status === 200) {
+            fetchResultEl.innerHTML += `<p style="color: green">✓ File exists with ${path}</p>`;
+          } else {
+            fetchResultEl.innerHTML += `<p style="color: orange">⚠ File fetch returned status ${result.status} with ${path}</p>`;
+          }
+        });
+      });
+    });
   </script>
   
   <!-- Load the scripts in the correct order -->
-  <script src="data.js"></script>
-  <script src="script.js"></script>
+  <script src="/atom-builder/data.js" onerror="console.error('Failed to load data.js')" crossorigin="anonymous"></script>
+  <script src="/atom-builder/script.js" onerror="console.error('Failed to load script.js')" crossorigin="anonymous"></script>
 </body>
 </html> 

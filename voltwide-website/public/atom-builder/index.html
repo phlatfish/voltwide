@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Atom Builder Simulation</title>
   <!-- Preload critical resources -->
-  <link rel="preload" href="data.js" as="script">
-  <link rel="preload" href="script.js" as="script">
+  <link rel="preload" href="/atom-builder/data.js" as="script" crossorigin="anonymous">
+  <link rel="preload" href="/atom-builder/script.js" as="script" crossorigin="anonymous">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- Inline critical CSS -->
   <style>
@@ -442,7 +442,14 @@
       </div>
     </div>
   </div>
-  <script src="data.js"></script>
-  <script src="script.js"></script>
+  <script>
+    // Add script loading diagnostics
+    console.log('Starting to load scripts...');
+    window.scriptLoadError = function(error) {
+      console.error('Script loading error:', error);
+    };
+  </script>
+  <script src="/atom-builder/data.js" onerror="window.scriptLoadError('data.js')" crossorigin="anonymous"></script>
+  <script src="/atom-builder/script.js" onerror="window.scriptLoadError('script.js')" crossorigin="anonymous"></script>
 </body>
 </html> 

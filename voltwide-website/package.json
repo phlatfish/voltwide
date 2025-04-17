@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && cp -r public/atom-builder dist/atom-builder",
+    "build": "vite build && mkdir -p dist/atom-builder && cp -r public/atom-builder/* dist/atom-builder/ && chmod -R 755 dist/atom-builder",
     "preview": "vite preview"
   },
   "devDependencies": {
