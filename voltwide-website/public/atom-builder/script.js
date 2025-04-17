@@ -27,6 +27,9 @@ const setElectronBtn = document.getElementById('set-electron-btn');
 const elementDescription = document.getElementById('element-description');
 
 let elementLookup = {};
+let dataLoaded = false;
+let initAttempts = 0;
+const MAX_INIT_ATTEMPTS = 5;
 
 function initElementLookup() {
     if (typeof elementsData !== 'undefined' && Array.isArray(elementsData)) {
@@ -36,8 +39,10 @@ function initElementLookup() {
                 elementLookup[element.atomic_number] = element;
             }
         });
+        dataLoaded = true;
     } else {
         console.warn('elementsData not available, using fallback element data');
+        // Use the built-in elementData as fallback
         for (let i = 1; i <= 20; i++) {
             if (elementData[i]) {
                 elementLookup[i] = elementData[i];
@@ -48,8 +53,34 @@ function initElementLookup() {
     console.log('Element lookup initialized with', Object.keys(elementLookup).length, 'elements');
 }
 
-if (typeof elementsData === 'undefined') {
-    console.error('WARNING: elementsData not loaded from data.js!');
+// Check if data.js is loaded, try to load it if not
+function ensureDataLoaded() {
+    if (typeof elementsData === 'undefined' && initAttempts < MAX_INIT_ATTEMPTS) {
+        console.log('Data not loaded, attempting to load data.js dynamically (attempt ' + (initAttempts + 1) + ')');
+        
+        // Try to load data.js dynamically
+        const dataScript = document.createElement('script');
+        dataScript.src = 'data.js';
+        dataScript.onload = function() {
+            console.log('data.js loaded dynamically');
+            initElementLookup();
+            initSimulation();
+        };
+        dataScript.onerror = function() {
+            console.error('Failed to load data.js dynamically');
+            initAttempts++;
+            
+            // Wait and try again
+            setTimeout(ensureDataLoaded, 500);
+        };
+        document.head.appendChild(dataScript);
+    } else if (initAttempts >= MAX_INIT_ATTEMPTS) {
+        console.warn('Max attempts reached, proceeding with fallback data');
+        initElementLookup();
+        initSimulation();
+    } else {
+        initElementLookup();
+    }
 }
 
 const state = {
@@ -803,7 +834,7 @@ function init() {
     console.log('Initializing atom builder simulation');
     
     // Initialize elements data
-    initElementLookup();
+    ensureDataLoaded();
     
     // Initialize canvas
     initCanvas();
