@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Script Loading Test</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    #status {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Script Loading Test</h1>
+  <p>This page tests whether the data.js and script.js files are loading correctly.</p>
+  <div id="status">Checking script loading...</div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    
+    // Check if scripts are loaded correctly
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        let status = '<h3>Script Loading Status:</h3>';
+        
+        // Check if data.js is loaded
+        if (typeof elementsData !== 'undefined') {
+          status += '<p style="color: green">✓ data.js loaded successfully (elementsData is defined)</p>';
+          status += `<p>Found ${elementsData.length} elements in the data</p>`;
+        } else {
+          status += '<p style="color: red">✗ data.js failed to load (elementsData is undefined)</p>';
+        }
+        
+        // Check if script.js functions exist
+        if (typeof initElementLookup === 'function') {
+          status += '<p style="color: green">✓ script.js loaded successfully (initElementLookup function exists)</p>';
+        } else {
+          status += '<p style="color: red">✗ script.js failed to load (initElementLookup function not found)</p>';
+        }
+        
+        statusEl.innerHTML = status;
+      }, 500);
+    });
+  </script>
+  
+  <!-- Load the scripts in the correct order -->
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html> 

@@ -26,62 +26,18 @@ const setNeutronBtn = document.getElementById('set-neutron-btn');
 const setElectronBtn = document.getElementById('set-electron-btn');
 const elementDescription = document.getElementById('element-description');
 
-console.log('Script initialized - checking for data.js');
-
-// Create a global debug element to show errors directly on the page
-function createDebugElement() {
-    const debugElement = document.createElement('div');
-    debugElement.id = 'debug-info';
-    debugElement.style.position = 'fixed';
-    debugElement.style.bottom = '10px';
-    debugElement.style.left = '10px';
-    debugElement.style.background = 'rgba(0,0,0,0.7)';
-    debugElement.style.color = 'white';
-    debugElement.style.padding = '10px';
-    debugElement.style.borderRadius = '5px';
-    debugElement.style.maxWidth = '80%';
-    debugElement.style.zIndex = '1000';
-    debugElement.style.fontSize = '12px';
-    document.body.appendChild(debugElement);
-    return debugElement;
-}
-
-const debugElement = createDebugElement();
-
-function logDebug(message) {
-    console.log(message);
-    if (debugElement) {
-        const msgElement = document.createElement('div');
-        msgElement.textContent = message;
-        debugElement.appendChild(msgElement);
-        // Limit to last 10 messages
-        while (debugElement.childNodes.length > 10) {
-            debugElement.removeChild(debugElement.firstChild);
-        }
-    }
-}
-
 let elementLookup = {};
-let dataLoaded = false;
-let initAttempts = 0;
-const MAX_INIT_ATTEMPTS = 5;
 
 function initElementLookup() {
-    logDebug('Initializing element lookup table');
-    
-    // First check if elementsData is already defined
     if (typeof elementsData !== 'undefined' && Array.isArray(elementsData)) {
-        logDebug(`Using elementsData from data.js - found ${elementsData.length} elements`);
+        console.log('Using elementsData from data.js - found', elementsData.length, 'elements');
         elementsData.forEach(element => {
             if (element && element.atomic_number) {
                 elementLookup[element.atomic_number] = element;
             }
         });
-        dataLoaded = true;
-        logDebug('Data successfully loaded from data.js');
     } else {
-        logDebug('WARNING: elementsData not available, using fallback element data');
-        // Use the built-in elementData as fallback
+        console.warn('elementsData not available, using fallback element data');
         for (let i = 1; i <= 20; i++) {
             if (elementData[i]) {
                 elementLookup[i] = elementData[i];
@@ -89,79 +45,11 @@ function initElementLookup() {
         }
     }
     
-    logDebug(`Element lookup initialized with ${Object.keys(elementLookup).length} elements`);
+    console.log('Element lookup initialized with', Object.keys(elementLookup).length, 'elements');
 }
 
-// Define elementsData directly in script.js as a fallback if data.js fails to load
-const fallbackElementsData = [
-    {
-        atomic_number: 1,
-        symbol: 'H',
-        name: 'Hydrogen',
-        description: 'The lightest element and most abundant chemical substance in the universe. It has one proton and one electron.'
-    },
-    {
-        atomic_number: 2,
-        symbol: 'He',
-        name: 'Helium',
-        description: 'The second-lightest element. Helium is a colorless, odorless, tasteless, non-toxic, inert, monatomic gas.'
-    }
-];
-
-// Check if data.js is loaded, try to load it if not
-function ensureDataLoaded() {
-    logDebug(`Checking if data is loaded (attempt ${initAttempts + 1})`);
-    
-    if (typeof elementsData === 'undefined') {
-        if (initAttempts < MAX_INIT_ATTEMPTS) {
-            logDebug(`Data not loaded, attempting to load data.js dynamically (attempt ${initAttempts + 1})`);
-            
-            // Try to load data.js dynamically
-            const dataScript = document.createElement('script');
-            dataScript.src = 'data.js?v=' + new Date().getTime(); // Add cache-busting parameter
-            dataScript.onload = function() {
-                logDebug('data.js loaded dynamically');
-                initElementLookup();
-                initSimulation();
-            };
-            dataScript.onerror = function(e) {
-                logDebug(`Failed to load data.js dynamically: ${e.message}`);
-                initAttempts++;
-                
-                // Wait and try again with a different path
-                setTimeout(() => {
-                    // Try alternate paths on subsequent attempts
-                    if (initAttempts === 2) {
-                        logDebug('Trying alternate path /atom-builder/data.js');
-                        const altScript = document.createElement('script');
-                        altScript.src = '/atom-builder/data.js?v=' + new Date().getTime();
-                        altScript.onload = function() {
-                            logDebug('data.js loaded from alternate path');
-                            initElementLookup();
-                            initSimulation();
-                        };
-                        altScript.onerror = function() {
-                            logDebug('Failed to load from alternate path');
-                            ensureDataLoaded(); // Continue with attempts
-                        };
-                        document.head.appendChild(altScript);
-                    } else {
-                        ensureDataLoaded();
-                    }
-                }, 500);
-            };
-            document.head.appendChild(dataScript);
-        } else {
-            logDebug('Max attempts reached, using inline fallback data');
-            // Use fallback data directly
-            window.elementsData = fallbackElementsData;
-            initElementLookup();
-            initSimulation();
-        }
-    } else {
-        logDebug('elementsData already available');
-        initElementLookup();
-    }
+if (typeof elementsData === 'undefined') {
+    console.error('WARNING: elementsData not loaded from data.js!');
 }
 
 const state = {
@@ -680,86 +568,75 @@ function updateElementInfo() {
 }
 
 function draw() {
-    try {
-        // Clear canvas with background color
-        ctx.fillStyle = colors.background;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // Draw nucleus
+    // Clear canvas with background color
+    ctx.fillStyle = colors.background;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw nucleus
+    ctx.beginPath();
+    ctx.arc(state.nucleus.x, state.nucleus.y, state.nucleus.radius, 0, Math.PI * 2);
+    ctx.fillStyle = colors.nucleus;
+    ctx.fill();
+    
+    // Draw electron shells
+    state.shells.forEach(shell => {
         ctx.beginPath();
-        ctx.arc(state.nucleus.x, state.nucleus.y, state.nucleus.radius, 0, Math.PI * 2);
-        ctx.fillStyle = colors.nucleus;
-        ctx.fill();
-        
-        // Draw electron shells
-        state.shells.forEach(shell => {
+        ctx.arc(state.nucleus.x, state.nucleus.y, shell.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = colors.shell;
+        ctx.lineWidth = sizes.shellWidth;
+        ctx.stroke();
+    });
+    
+    if (state.neutrons + state.protons > 50) {
+        if (state.neutrons > 0) {
             ctx.beginPath();
-            ctx.arc(state.nucleus.x, state.nucleus.y, shell.radius, 0, Math.PI * 2);
-            ctx.strokeStyle = colors.shell;
-            ctx.lineWidth = sizes.shellWidth;
-            ctx.stroke();
-        });
-        
-        if (state.neutrons + state.protons > 50) {
-            if (state.neutrons > 0) {
-                ctx.beginPath();
-                ctx.arc(state.nucleus.x - state.nucleus.radius * 0.3, state.nucleus.y, state.nucleus.radius * 0.6, 0, Math.PI * 2);
-                ctx.fillStyle = colors.neutron;
-                ctx.fill();
-                
-                ctx.fillStyle = 'white';
-                ctx.font = '12px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(`${state.neutrons}n`, state.nucleus.x - state.nucleus.radius * 0.3, state.nucleus.y);
-            }
+            ctx.arc(state.nucleus.x - state.nucleus.radius * 0.3, state.nucleus.y, state.nucleus.radius * 0.6, 0, Math.PI * 2);
+            ctx.fillStyle = colors.neutron;
+            ctx.fill();
             
-            if (state.protons > 0) {
-                ctx.beginPath();
-                ctx.arc(state.nucleus.x + state.nucleus.radius * 0.3, state.nucleus.y, state.nucleus.radius * 0.6, 0, Math.PI * 2);
-                ctx.fillStyle = colors.proton;
-                ctx.fill();
-                
-                ctx.fillStyle = 'white';
-                ctx.font = '12px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(`${state.protons}p`, state.nucleus.x + state.nucleus.radius * 0.3, state.nucleus.y);
-            }
-        } else {
-            state.particles.neutrons.forEach(neutron => {
-                ctx.beginPath();
-                ctx.arc(neutron.x, neutron.y, sizes.neutron, 0, Math.PI * 2);
-                ctx.fillStyle = colors.neutron;
-                ctx.fill();
-            });
-            
-            state.particles.protons.forEach(proton => {
-                ctx.beginPath();
-                ctx.arc(proton.x, proton.y, sizes.proton, 0, Math.PI * 2);
-                ctx.fillStyle = colors.proton;
-                ctx.fill();
-            });
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${state.neutrons}n`, state.nucleus.x - state.nucleus.radius * 0.3, state.nucleus.y);
         }
         
-        state.shells.forEach(shell => {
-            shell.electronPositions.forEach(electron => {
-                ctx.beginPath();
-                ctx.arc(electron.x, electron.y, sizes.electron, 0, Math.PI * 2);
-                ctx.fillStyle = colors.electron;
-                ctx.fill();
-            });
+        if (state.protons > 0) {
+            ctx.beginPath();
+            ctx.arc(state.nucleus.x + state.nucleus.radius * 0.3, state.nucleus.y, state.nucleus.radius * 0.6, 0, Math.PI * 2);
+            ctx.fillStyle = colors.proton;
+            ctx.fill();
+            
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${state.protons}p`, state.nucleus.x + state.nucleus.radius * 0.3, state.nucleus.y);
+        }
+    } else {
+        state.particles.neutrons.forEach(neutron => {
+            ctx.beginPath();
+            ctx.arc(neutron.x, neutron.y, sizes.neutron, 0, Math.PI * 2);
+            ctx.fillStyle = colors.neutron;
+            ctx.fill();
         });
         
-        // Draw debug text to confirm drawing is happening
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.font = '10px Arial';
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'bottom';
-        ctx.fillText(`p:${state.protons} n:${state.neutrons} e:${state.electrons}`, canvas.width - 10, canvas.height - 10);
-    } catch (error) {
-        logDebug(`Error in draw: ${error.message}`);
+        state.particles.protons.forEach(proton => {
+            ctx.beginPath();
+            ctx.arc(proton.x, proton.y, sizes.proton, 0, Math.PI * 2);
+            ctx.fillStyle = colors.proton;
+            ctx.fill();
+        });
     }
+    
+    state.shells.forEach(shell => {
+        shell.electronPositions.forEach(electron => {
+            ctx.beginPath();
+            ctx.arc(electron.x, electron.y, sizes.electron, 0, Math.PI * 2);
+            ctx.fillStyle = colors.electron;
+            ctx.fill();
+        });
+    });
 }
 
 function animate() {
@@ -923,38 +800,58 @@ function setupEventListeners() {
 }
 
 function init() {
-    logDebug('Initializing atom builder simulation');
+    console.log('Initializing atom builder simulation');
     
-    try {
+    // Check if elementsData is loaded
+    if (typeof elementsData === 'undefined') {
+        console.error('elementsData is not defined, attempting to load data.js again');
+        // Try to load data.js dynamically if not already loaded
+        const script = document.createElement('script');
+        script.src = './data.js';
+        script.onload = function() {
+            console.log('Successfully loaded data.js dynamically');
+            continueInit();
+        };
+        script.onerror = function() {
+            console.error('Failed to load data.js dynamically');
+            // Continue with fallback data
+            continueInit();
+        };
+        document.head.appendChild(script);
+    } else {
+        continueInit();
+    }
+    
+    function continueInit() {
+        // Initialize elements data
+        initElementLookup();
+        
         // Initialize canvas
         initCanvas();
-        
-        // Initialize elements data
-        ensureDataLoaded();
         
         // Set up event listeners
         setupEventListeners();
         
+        // Initialize the simulation
+        initSimulation();
+        
         // Force initial draw
         draw();
         
-        logDebug('Initialization complete');
-    } catch (error) {
-        logDebug(`Initialization error: ${error.message}`);
+        console.log('Initialization complete');
     }
 }
 
 // Wait for DOM content to be loaded before initializing
 document.addEventListener('DOMContentLoaded', function() {
-    logDebug('DOMContentLoaded event fired');
-    init();
+    // Delay initialization slightly to ensure all resources are loaded
+    setTimeout(init, 100);
 });
 
 // Also try window load event as a fallback
 window.addEventListener('load', function() {
-    logDebug('Window load event fired');
     if (!state.animation) {
-        logDebug('Initializing on window load (fallback)');
+        console.log('Initializing on window load (fallback)');
         init();
     }
 }); 
